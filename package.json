@@ -5,7 +5,7 @@
   "private": true,
   "description": "AI-powered intake and triage pipeline for inbound customer requests",
   "scripts": {
-    "test": "node --test lib/",
+    "test": "node --test",
     "build": "node scripts/build-workflow.mjs"
   }
 }
