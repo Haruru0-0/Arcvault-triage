@@ -142,12 +142,35 @@ const SHEET_COLUMNS = [
 // credential is selected in the UI (Task 5). A placeholder id would error.
 const SHEETS_CREDENTIAL_ID = process.env.GOOGLE_SHEETS_CREDENTIAL_ID || '';
 
+// Tab gids, needed for the sheetName resource locator in "list" mode.
+const TAB_GIDS = {
+  Routed: process.env.GOOGLE_TAB_GID_ROUTED || '',
+  Escalation: process.env.GOOGLE_TAB_GID_ESCALATION || '',
+};
+
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
+
 function sheetsNode(name, tabName, position) {
   return {
     parameters: {
       operation: 'append',
-      documentId: { __rl: true, value: SHEET_ID, mode: 'id' },
-      sheetName: { __rl: true, value: tabName, mode: 'name' },
+      // Resource locators must be in "list" mode with cached display values.
+      // A bare id renders as "no file chosen" in the editor and n8n refuses to
+      // publish, even though the append itself works.
+      documentId: {
+        __rl: true,
+        value: SHEET_ID,
+        mode: 'list',
+        cachedResultName: 'ArcVault Triage Output',
+        cachedResultUrl: SHEET_URL,
+      },
+      sheetName: {
+        __rl: true,
+        value: TAB_GIDS[tabName],
+        mode: 'list',
+        cachedResultName: tabName,
+        cachedResultUrl: `${SHEET_URL}#gid=${TAB_GIDS[tabName]}`,
+      },
       columns: {
         mappingMode: 'defineBelow',
         value: Object.fromEntries(SHEET_COLUMNS.map((c) => [c, `={{ $json.${c} }}`])),

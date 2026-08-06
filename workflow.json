@@ -147,12 +147,16 @@
         "documentId": {
           "__rl": true,
           "value": "1Gc_XxMHd-3UX8JZfc4dTTi4Eg2h5fg1NLm75-klCxhs",
-          "mode": "id"
+          "mode": "list",
+          "cachedResultName": "ArcVault Triage Output",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Gc_XxMHd-3UX8JZfc4dTTi4Eg2h5fg1NLm75-klCxhs/edit"
         },
         "sheetName": {
           "__rl": true,
-          "value": "Escalation",
-          "mode": "name"
+          "value": "639998896",
+          "mode": "list",
+          "cachedResultName": "Escalation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Gc_XxMHd-3UX8JZfc4dTTi4Eg2h5fg1NLm75-klCxhs/edit#gid=639998896"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -325,12 +329,16 @@
         "documentId": {
           "__rl": true,
           "value": "1Gc_XxMHd-3UX8JZfc4dTTi4Eg2h5fg1NLm75-klCxhs",
-          "mode": "id"
+          "mode": "list",
+          "cachedResultName": "ArcVault Triage Output",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Gc_XxMHd-3UX8JZfc4dTTi4Eg2h5fg1NLm75-klCxhs/edit"
         },
         "sheetName": {
           "__rl": true,
-          "value": "Routed",
-          "mode": "name"
+          "value": "331348397",
+          "mode": "list",
+          "cachedResultName": "Routed",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Gc_XxMHd-3UX8JZfc4dTTi4Eg2h5fg1NLm75-klCxhs/edit#gid=331348397"
         },
         "columns": {
           "mappingMode": "defineBelow",
