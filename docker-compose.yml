@@ -1,0 +1,31 @@
+# REFERENCE ONLY — not used in this build.
+#
+# n8n was already running on this machine in a container named `n8n` before the
+# project started, so this file is included for a reviewer who wants to
+# reproduce the setup from scratch. Running `docker compose up` here would
+# collide on port 5678 with the existing container.
+#
+# Note the `./data` bind mount below: the pre-existing container does not have
+# one, which is why the workflow writes records inside the n8n data volume and
+# they are copied out with `docker cp`. A from-scratch setup using this file
+# would get them on the host directly.
+
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: arcvault-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - GENERIC_TIMEZONE=America/Toronto
+      - TZ=America/Toronto
+      - N8N_SECURE_COOKIE=false
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_DIAGNOSTICS_ENABLED=false
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./data:/data
+
+volumes:
+  n8n_data:

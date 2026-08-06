@@ -1,0 +1,11 @@
+{
+  "name": "arcvault-triage",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "AI-powered intake and triage pipeline for inbound customer requests",
+  "scripts": {
+    "test": "node --test lib/",
+    "build": "node scripts/build-workflow.mjs"
+  }
+}
