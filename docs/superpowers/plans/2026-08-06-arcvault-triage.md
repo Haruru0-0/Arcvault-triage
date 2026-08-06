@@ -12,7 +12,8 @@
 
 - Free / open-source tooling only. DeepSeek is pay-as-you-go but costs <$0.01 for this run.
 - Model: `deepseek-v4-flash`. Base URL `https://api.deepseek.com`. Endpoint `/chat/completions`.
-- JSON mode requires `response_format: {"type":"json_object"}`, the literal word "json" in the prompt, a structure example in the prompt, and an explicit `max_tokens`.
+- JSON mode requires `response_format: {"type":"json_object"}`, the literal word "json" in the prompt, and a structure example in the prompt.
+- `max_tokens`: **1500** classification, **2000** enrichment. `deepseek-v4-flash` is a reasoning model whose `reasoning_content` is billed against `max_tokens`; measured reasoning use is 200–800 tokens. Budgets below ~1000 truncate the answer and return `finish_reason: "length"` with empty or partial JSON. Do not lower these to match the visible output size.
 - Categories, exactly these five: `Bug Report`, `Feature Request`, `Billing Issue`, `Technical Question`, `Incident/Outage`.
 - Priorities, exactly these three: `Low`, `Medium`, `High`.
 - Queues: `Engineering`, `Product`, `Billing`, `IT/Security`, `General Triage`.
@@ -800,14 +801,14 @@ for (const s of samples) {
       system: CLASSIFY_SYSTEM,
       user: `Source: ${s.source}\n\nMessage:\n${s.raw_message}`,
       temperature: 0,
-      maxTokens: 200,
+      maxTokens: 1500,
     });
 
     enrichment = await callDeepSeek({
       system: ENRICH_SYSTEM,
       user: `Category: ${classification.category}\nPriority: ${classification.priority}\nSource: ${s.source}\n\nMessage:\n${s.raw_message}`,
       temperature: 0.3,
-      maxTokens: 600,
+      maxTokens: 2000,
     });
   } catch (err) {
     process.stderr.write(`  FAILED: ${err.message}\n`);
@@ -958,7 +959,7 @@ Connections: 1→2→3→4→5; 5(true)→6, 5(false)→7; 6→8 and 7→8; 8→
 ={{ JSON.stringify({
   model: "deepseek-v4-flash",
   temperature: 0,
-  max_tokens: 200,
+  max_tokens: 1500,
   response_format: { type: "json_object" },
   messages: [
     { role: "system", content: $json.CLASSIFY_SYSTEM_PROMPT },

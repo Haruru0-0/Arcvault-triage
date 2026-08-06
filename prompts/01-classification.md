@@ -1,6 +1,6 @@
 # Prompt 1 — Classification
 
-Model: `deepseek-v4-flash` · `temperature: 0` · `max_tokens: 200` ·
+Model: `deepseek-v4-flash` · `temperature: 0` · `max_tokens: 1500` ·
 `response_format: {"type": "json_object"}`
 
 ## System prompt
@@ -74,6 +74,17 @@ does.
 
 `temperature: 0` because classification should be reproducible: the same message
 must not route differently between two runs.
+
+**`max_tokens: 1500` for a response that is three short fields.** `deepseek-v4-flash`
+is a reasoning model — it emits `reasoning_content` before the answer, and those
+tokens are billed against `max_tokens`. My first run set 200, and three of five
+samples failed: the model spent 185 tokens reasoning and had 15 left for the
+answer, so the JSON came back truncated with `finish_reason: "length"`. The
+failure surfaced as empty or unparseable content, which looks like a malformed
+response rather than a budget problem, and `finish_reason` was the only field
+that identified it. Observed reasoning use is roughly 200–800 tokens, so 1500
+leaves comfortable headroom. At $0.28 per million output tokens the extra budget
+costs effectively nothing; a silently truncated classification does not.
 
 **Tradeoffs.** The category definitions are my interpretation, not ArcVault's — a
 real deployment would derive them from the receiving teams' actual intake

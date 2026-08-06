@@ -1,6 +1,6 @@
 # Prompt 2 — Enrichment and summary
 
-Model: `deepseek-v4-flash` · `temperature: 0.3` · `max_tokens: 600` ·
+Model: `deepseek-v4-flash` · `temperature: 0.3` · `max_tokens: 2000` ·
 `response_format: {"type": "json_object"}`
 
 ## System prompt
@@ -70,6 +70,16 @@ on it. Repeating the constraint that matters most is deliberate.
 decoding tends toward stilted, repetitive sentences. Extraction is constrained
 enough by the "copy verbatim" instruction that a small temperature does not put
 identifier fidelity at risk.
+
+`max_tokens: 2000` — higher than prompt 1 because this call emits four fields
+including a multi-sentence summary, on top of the reasoning tokens
+`deepseek-v4-flash` generates before answering. See prompt 1's rationale for why
+that budget matters more than it looks.
+
+Verified against all five samples: every extracted identifier appears verbatim in
+its source message, and no field was fabricated. That is the check that matters
+most for this prompt, so it is worth stating as a result rather than an
+intention.
 
 **Tradeoffs.** `identifiers` is a flat array of strings rather than typed
 key/value pairs. Typed extraction (`{"invoice": "#8821"}`) would be more useful

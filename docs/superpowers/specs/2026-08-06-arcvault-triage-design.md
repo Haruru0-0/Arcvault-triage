@@ -117,8 +117,9 @@ just a pile.
 - **JSON mode:** `response_format: {"type": "json_object"}`
 - **Temperature:** `0` for classification (reproducibility matters for a demo
   and for calibration), `0.3` for enrichment/summary (prose quality).
-- **`max_tokens`:** set explicitly on both calls — DeepSeek's docs warn that
-  unset limits cause truncated (and therefore unparseable) JSON.
+- **`max_tokens`:** `1500` classification, `2000` enrichment. See the
+  reasoning-model note below — these are far larger than the visible output
+  needs, deliberately.
 - **Credentials:** entered into n8n's credential manager in the browser. Never
   committed to the repo.
 
@@ -138,6 +139,20 @@ good prompt design regardless.
 occasionally return empty content." This is not hypothetical defensive coding —
 it is a known behaviour of the chosen provider, and it is precisely what the
 parse-failure path in §7 exists to absorb.
+
+**Reasoning-model token budget (measured, not assumed).** `deepseek-v4-flash`
+generates `reasoning_content` before its answer, and those tokens count against
+`max_tokens`. With `max_tokens: 200`, three of the five samples failed: the model
+used 185 tokens reasoning and had 15 left, returning truncated JSON with
+`finish_reason: "length"`.
+
+Two things make this worth recording. First, it presents as empty or malformed
+content — indistinguishable from the vendor-documented quirk above — and only
+`finish_reason` distinguishes a budget problem from a bad response. Second, it
+means the parse-failure path was exercised for real before the pipeline was even
+built, which is stronger evidence that it works than any deliberate test would
+have been. Budgets are now 1500 and 2000 against observed reasoning use of
+200–800 tokens.
 
 ### Confidence calibration — known weakness
 

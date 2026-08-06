@@ -64,12 +64,29 @@ async function callDeepSeek({ system, user, temperature, maxTokens }) {
   }
 
   const body = await res.json();
-  const content = body.choices?.[0]?.message?.content;
-  // DeepSeek documents that JSON mode can occasionally return empty content.
-  if (!content || !content.trim()) {
-    throw new Error('DeepSeek returned empty content');
+  const choice = body.choices?.[0];
+  const content = choice?.message?.content;
+
+  // deepseek-v4-flash is a reasoning model: reasoning_content is generated first
+  // and billed against max_tokens. Too small a budget truncates or empties the
+  // actual answer, and finish_reason is the only thing that says so.
+  if (choice?.finish_reason === 'length') {
+    const reasoning = choice.message?.reasoning_content?.length ?? 0;
+    throw new Error(
+      `truncated: hit max_tokens (${body.usage?.completion_tokens} completion tokens, ` +
+        `${body.usage?.completion_tokens_details?.reasoning_tokens ?? '?'} of them reasoning, ` +
+        `reasoning_content ${reasoning} chars)`,
+    );
   }
-  return JSON.parse(content);
+  if (!content || !content.trim()) {
+    throw new Error(`empty content (finish_reason=${choice?.finish_reason})`);
+  }
+
+  try {
+    return JSON.parse(content);
+  } catch {
+    throw new Error(`unparseable JSON: ${content.slice(0, 120)}`);
+  }
 }
 
 const samples = JSON.parse(fs.readFileSync(path.join(ROOT, 'samples/inbound.json'), 'utf8'));
@@ -87,7 +104,7 @@ for (const sample of samples) {
       system: CLASSIFY_SYSTEM,
       user: `Source: ${sample.source}\n\nMessage:\n${sample.raw_message}`,
       temperature: 0,
-      maxTokens: 200,
+      maxTokens: 1500,
     });
 
     enrichment = await callDeepSeek({
@@ -98,7 +115,7 @@ for (const sample of samples) {
         `Source: ${sample.source}\n\n` +
         `Message:\n${sample.raw_message}`,
       temperature: 0.3,
-      maxTokens: 600,
+      maxTokens: 2000,
     });
 
     process.stderr.write('ok\n');
