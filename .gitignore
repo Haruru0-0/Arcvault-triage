@@ -3,3 +3,6 @@ node_modules/
 *.log
 credentials.json
 service-account*.json
+
+# Per-run webhook responses; output.json is the committed deliverable
+data/records/

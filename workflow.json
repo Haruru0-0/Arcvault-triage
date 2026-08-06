@@ -1,0 +1,563 @@
+{
+  "name": "ArcVault Intake & Triage",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        0
+      ],
+      "id": "intake-webhook",
+      "name": "Intake Webhook",
+      "webhookId": "arcvault-intake"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.deepseek.com/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "deepSeekApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\"model\":\"deepseek-v4-flash\",\"temperature\":0,\"max_tokens\":1500,\"response_format\":{\"type\":\"json_object\"},\"messages\":[{\"role\":\"system\",\"content\":\"You are a support triage classifier for ArcVault, a B2B software company.\\nClassify a single inbound customer message.\\n\\nReturn json only. No prose, no markdown fences.\\n\\nSchema:\\n{\\n  \\\"category\\\": \\\"Bug Report\\\" | \\\"Feature Request\\\" | \\\"Billing Issue\\\" | \\\"Technical Question\\\" | \\\"Incident/Outage\\\",\\n  \\\"priority\\\": \\\"Low\\\" | \\\"Medium\\\" | \\\"High\\\",\\n  \\\"confidence\\\": number between 0 and 1\\n}\\n\\nCategory definitions:\\n- Bug Report: something is broken for this customer, and they describe specific incorrect behaviour.\\n- Feature Request: they are asking for capability that does not exist yet.\\n- Billing Issue: invoices, charges, pricing, refunds, contract rates.\\n- Technical Question: they are asking how to do something, or whether something is possible. Nothing is broken.\\n- Incident/Outage: a service disruption that appears to affect many users, not just the sender.\\n\\nBug Report vs Incident/Outage: if the message signals breadth of impact\\n(\\\"multiple users\\\", \\\"everyone\\\", \\\"all our staff\\\", \\\"company-wide\\\"), or describes a\\nservice being unreachable rather than misbehaving, choose Incident/Outage.\\nA single user blocked is a Bug Report.\\n\\nPriority:\\n- High: work is blocked now, money is at risk, or many users are affected.\\n- Medium: meaningful friction, but the customer has a path forward.\\n- Low: informational, aspirational, or convenience.\\n\\nConfidence — use this scale honestly:\\n- 0.90-1.00: the message states its intent unambiguously; only one category fits.\\n- 0.70-0.89: the category is clear, but some detail is ambiguous or missing.\\n- 0.50-0.69: two categories plausibly fit and you picked the better one.\\n- below 0.50: not enough information to classify with any confidence.\\nDo not default to a high value. A wrong confident answer is worse than an\\nhonest uncertain one, because a human reviews anything below 0.70.\"},{\"role\":\"user\",\"content\":\"Source: \" + $('Intake Webhook').first().json.body.source + \"\\n\\nMessage:\\n\" + $('Intake Webhook').first().json.body.raw_message}]} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -180,
+        0
+      ],
+      "id": "classify",
+      "name": "Classify",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "uhvZCPtk6lRdNwuz",
+          "name": "DeepSeek account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.deepseek.com/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "deepSeekApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\"model\":\"deepseek-v4-flash\",\"temperature\":0.3,\"max_tokens\":2000,\"response_format\":{\"type\":\"json_object\"},\"messages\":[{\"role\":\"system\",\"content\":\"You extract structured detail from an inbound customer support message for\\nArcVault, a B2B software company. The message has already been classified.\\n\\nReturn json only. No prose, no markdown fences.\\n\\nSchema:\\n{\\n  \\\"core_issue\\\": \\\"one sentence stating what the customer needs\\\",\\n  \\\"identifiers\\\": [\\\"array of concrete identifiers quoted from the message\\\"],\\n  \\\"urgency_signal\\\": \\\"one sentence on what makes this urgent or not, grounded in the message\\\",\\n  \\\"summary\\\": \\\"2-3 sentences for the team receiving this ticket\\\"\\n}\\n\\nRules:\\n- identifiers: copy verbatim from the message. Include account names, URLs,\\n  usernames, invoice numbers, error codes, ticket numbers, dollar amounts,\\n  product names and timestamps. Return [] if the message contains none.\\n  Never invent an identifier that is not present in the text.\\n- urgency_signal: describe evidence from the message, such as scope of impact,\\n  money at stake, or whether the customer is blocked. Do not restate the priority\\n  label.\\n- summary: write for the team that receives this ticket. State what happened,\\n  what is known, and what they should look at. Do not repeat the raw message\\n  verbatim and do not open with a greeting.\\n- Never invent facts. If something is not in the message, leave it out.\"},{\"role\":\"user\",\"content\":\"Category: \" + $('Classify').first().json.choices[0].message.content.category + \"\\nPriority: \" + $('Classify').first().json.choices[0].message.content.priority + \"\\nSource: \" + $('Intake Webhook').first().json.body.source + \"\\n\\nMessage:\\n\" + $('Intake Webhook').first().json.body.raw_message}]} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        40,
+        0
+      ],
+      "id": "enrich",
+      "name": "Enrich & Summarize",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "uhvZCPtk6lRdNwuz",
+          "name": "DeepSeek account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "/**\n * Routing and escalation logic for the ArcVault intake pipeline.\n *\n * This is the single source of truth for these rules. `scripts/build-workflow.mjs`\n * strips the trailing `export { ... }` block and injects everything above it into\n * the n8n \"Route & Escalate\" Code node, so the rules that run in production are\n * literally the rules covered by `lib/triage.test.js`.\n *\n * Constraint that follows from that: no top-level `import`, and no `export`\n * keyword on any declaration. Only the export block at the bottom.\n */\n\nconst CATEGORIES = [\n  'Bug Report',\n  'Feature Request',\n  'Billing Issue',\n  'Technical Question',\n  'Incident/Outage',\n];\n\nconst QUEUES = {\n  ENGINEERING: 'Engineering',\n  PRODUCT: 'Product',\n  BILLING: 'Billing',\n  IT_SECURITY: 'IT/Security',\n  FALLBACK: 'General Triage',\n};\n\nconst CATEGORY_ROUTES = {\n  'Bug Report': QUEUES.ENGINEERING,\n  // An outage of ArcVault's own service is an engineering/SRE concern.\n  // IT/Security owns access, identity and authentication.\n  'Incident/Outage': QUEUES.ENGINEERING,\n  'Feature Request': QUEUES.PRODUCT,\n  'Billing Issue': QUEUES.BILLING,\n  // 'Technical Question' is handled conditionally in routeRecord().\n};\n\nconst CONFIDENCE_THRESHOLD = 0.7;\nconst BILLING_THRESHOLD = 500;\n\n// Applied only to Technical Questions, so \"logging in\" in a bug report is unaffected.\nconst SECURITY_TERMS =\n  /\\b(sso|okta|saml|oauth|mfa|2fa|idp|ldap|scim|auth provider|authentication provider|identity provider|access control|permissions?)\\b/i;\n\n// Secondary net only. Category is the primary incident signal — sample 5 escalates\n// on category precisely because it contains none of these phrases.\nconst OUTAGE_TERMS =\n  /outage|down for all users|all users (are )?(down|affected)|multiple users (are )?(affected|impacted)|service is down|widespread/i;\n\nfunction isSecurityRelated(text = '') {\n  return SECURITY_TERMS.test(text);\n}\n\nfunction maxCurrencyAmount(text = '') {\n  const matches = text.match(/\\$\\s?[\\d,]+(?:\\.\\d{1,2})?/g) || [];\n  const amounts = matches\n    .map((m) => Number(m.replace(/[$,\\s]/g, '')))\n    .filter((n) => Number.isFinite(n));\n  return amounts.length ? Math.max(...amounts) : 0;\n}\n\nfunction routeRecord({ category, raw_message = '' }) {\n  if (category === 'Technical Question') {\n    return isSecurityRelated(raw_message) ? QUEUES.IT_SECURITY : QUEUES.PRODUCT;\n  }\n  return CATEGORY_ROUTES[category] || QUEUES.FALLBACK;\n}\n\nfunction evaluateEscalation({ category, confidence, raw_message = '', parse_failed = false }) {\n  // When parsing failed the other signals cannot be trusted, so this is the sole reason.\n  if (parse_failed) {\n    return { escalation_flag: true, escalation_reasons: ['llm_parse_failure'] };\n  }\n\n  const reasons = [];\n\n  if (typeof confidence !== 'number' || Number.isNaN(confidence) || confidence < CONFIDENCE_THRESHOLD) {\n    reasons.push('low_confidence');\n  }\n  if (!CATEGORIES.includes(category)) {\n    reasons.push('unknown_category');\n  }\n  if (category === 'Incident/Outage') {\n    reasons.push('incident_category');\n  }\n  if (OUTAGE_TERMS.test(raw_message)) {\n    reasons.push('outage_keyword');\n  }\n  if (category === 'Billing Issue' && maxCurrencyAmount(raw_message) > BILLING_THRESHOLD) {\n    reasons.push('billing_threshold');\n  }\n\n  return { escalation_flag: reasons.length > 0, escalation_reasons: reasons };\n}\n\nfunction makeRecordId(now = new Date(), rand = Math.random) {\n  const ts = now.toISOString().replace(/[-:.]/g, '').replace(/\\d{3}Z$/, 'Z');\n  const suffix = Math.floor(rand() * 0xffff).toString(16).padStart(4, '0');\n  return `av-${ts}-${suffix}`;\n}\n\nfunction buildRecord({\n  source,\n  raw_message,\n  classification = {},\n  enrichment = {},\n  parse_failed = false,\n  now = new Date(),\n  rand = Math.random,\n}) {\n  const category = classification.category;\n\n  const { escalation_flag, escalation_reasons } = evaluateEscalation({\n    category,\n    confidence: classification.confidence,\n    raw_message,\n    parse_failed,\n  });\n\n  return {\n    record_id: makeRecordId(now, rand),\n    received_at: now.toISOString(),\n    source: source ?? null,\n    raw_message: raw_message ?? null,\n    category: category ?? null,\n    priority: classification.priority ?? null,\n    confidence: typeof classification.confidence === 'number' ? classification.confidence : null,\n    core_issue: enrichment.core_issue ?? null,\n    identifiers: Array.isArray(enrichment.identifiers) ? enrichment.identifiers : [],\n    urgency_signal: enrichment.urgency_signal ?? null,\n    routing_destination: parse_failed ? QUEUES.FALLBACK : routeRecord({ category, raw_message }),\n    escalation_flag,\n    escalation_reasons,\n    summary: enrichment.summary ?? null,\n  };\n}\n\n// ---- n8n glue ----------------------------------------------------------\n// Everything above is lib/triage.js verbatim, injected by scripts/build-workflow.mjs\n// and covered by lib/triage.test.js.\n\nconst webhookBody = $('Intake Webhook').first().json.body;\nconst source = webhookBody.source;\nconst raw_message = webhookBody.raw_message;\n\nfunction safeParse(nodeName) {\n  try {\n    const content = $(nodeName).first().json?.choices?.[0]?.message?.content;\n    if (content === undefined || content === null) return null;\n    if (typeof content === 'object') return content;   // n8n may pre-parse JSON responses\n    if (!String(content).trim()) return null;\n    return JSON.parse(content);\n  } catch (e) {\n    return null;\n  }\n}\n\nconst classification = safeParse('Classify');\nconst enrichment = safeParse('Enrich & Summarize');\nconst parse_failed = classification === null || enrichment === null;\n\nconst record = buildRecord({\n  source,\n  raw_message,\n  classification: classification || {},\n  enrichment: enrichment || {},\n  parse_failed,\n});\n\n// Google Sheets cells are flat, so arrays get a joined companion field.\n// The JSON file keeps the real arrays.\nreturn [{\n  json: {\n    ...record,\n    identifiers_text: record.identifiers.join('; '),\n    escalation_reasons_text: record.escalation_reasons.join('; '),\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ],
+      "id": "route-escalate",
+      "name": "Route & Escalate"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        -180
+      ],
+      "id": "respond",
+      "name": "Respond"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "is-escalated",
+              "leftValue": "={{ $json.escalation_flag }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        40
+      ],
+      "id": "is-escalated",
+      "name": "Is Escalated?"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Escalation",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "record_id": "={{ $json.record_id }}",
+            "received_at": "={{ $json.received_at }}",
+            "source": "={{ $json.source }}",
+            "category": "={{ $json.category }}",
+            "priority": "={{ $json.priority }}",
+            "confidence": "={{ $json.confidence }}",
+            "core_issue": "={{ $json.core_issue }}",
+            "identifiers_text": "={{ $json.identifiers_text }}",
+            "urgency_signal": "={{ $json.urgency_signal }}",
+            "routing_destination": "={{ $json.routing_destination }}",
+            "escalation_flag": "={{ $json.escalation_flag }}",
+            "escalation_reasons_text": "={{ $json.escalation_reasons_text }}",
+            "summary": "={{ $json.summary }}",
+            "raw_message": "={{ $json.raw_message }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "record_id",
+              "displayName": "record_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "received_at",
+              "displayName": "received_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "confidence",
+              "displayName": "confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "core_issue",
+              "displayName": "core_issue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "identifiers_text",
+              "displayName": "identifiers_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "urgency_signal",
+              "displayName": "urgency_signal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "routing_destination",
+              "displayName": "routing_destination",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "escalation_flag",
+              "displayName": "escalation_flag",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "escalation_reasons_text",
+              "displayName": "escalation_reasons_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "raw_message",
+              "displayName": "raw_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        700,
+        -60
+      ],
+      "id": "sheet-escalation",
+      "name": "Sheet: Escalation",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Routed",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "record_id": "={{ $json.record_id }}",
+            "received_at": "={{ $json.received_at }}",
+            "source": "={{ $json.source }}",
+            "category": "={{ $json.category }}",
+            "priority": "={{ $json.priority }}",
+            "confidence": "={{ $json.confidence }}",
+            "core_issue": "={{ $json.core_issue }}",
+            "identifiers_text": "={{ $json.identifiers_text }}",
+            "urgency_signal": "={{ $json.urgency_signal }}",
+            "routing_destination": "={{ $json.routing_destination }}",
+            "escalation_flag": "={{ $json.escalation_flag }}",
+            "escalation_reasons_text": "={{ $json.escalation_reasons_text }}",
+            "summary": "={{ $json.summary }}",
+            "raw_message": "={{ $json.raw_message }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "record_id",
+              "displayName": "record_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "received_at",
+              "displayName": "received_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "confidence",
+              "displayName": "confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "core_issue",
+              "displayName": "core_issue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "identifiers_text",
+              "displayName": "identifiers_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "urgency_signal",
+              "displayName": "urgency_signal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "routing_destination",
+              "displayName": "routing_destination",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "escalation_flag",
+              "displayName": "escalation_flag",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "escalation_reasons_text",
+              "displayName": "escalation_reasons_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "raw_message",
+              "displayName": "raw_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        700,
+        140
+      ],
+      "id": "sheet-routed",
+      "name": "Sheet: Routed",
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "Intake Webhook": {
+      "main": [
+        [
+          {
+            "node": "Classify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify": {
+      "main": [
+        [
+          {
+            "node": "Enrich & Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich & Summarize": {
+      "main": [
+        [
+          {
+            "node": "Route & Escalate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route & Escalate": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Is Escalated?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Escalated?": {
+      "main": [
+        [
+          {
+            "node": "Sheet: Escalation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sheet: Routed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

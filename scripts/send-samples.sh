@@ -4,6 +4,9 @@
 # separate POST, one second apart. Five independent events, not a batch — the
 # pipeline is meant to fire per inbound message.
 #
+# The workflow's Respond node returns the complete record, so each response is
+# saved to data/records/ and merged into output.json by scripts/merge-records.sh.
+#
 # Usage:  bash scripts/send-samples.sh
 #         WEBHOOK_URL=http://host:5678/webhook/intake bash scripts/send-samples.sh
 
@@ -18,6 +21,8 @@ if [ ! -f samples/inbound.json ]; then
   exit 1
 fi
 
+mkdir -p data/records
+
 mapfile -t payloads < <(node --input-type=module -e "
 import fs from 'node:fs';
 const samples = JSON.parse(fs.readFileSync('samples/inbound.json', 'utf8'));
@@ -30,15 +35,39 @@ echo "Sending ${#payloads[@]} samples to ${WEBHOOK_URL}"
 echo
 
 i=0
+failed=0
 for payload in "${payloads[@]}"; do
   i=$((i + 1))
-  echo "--> Sample ${i}"
-  curl -sS -X POST "$WEBHOOK_URL" \
+  out="data/records/sample-$(printf '%02d' "$i").json"
+
+  status=$(curl -sS -X POST "$WEBHOOK_URL" \
     -H 'Content-Type: application/json' \
-    -d "$payload"
-  echo
-  echo
+    -d "$payload" \
+    -o "$out" \
+    -w '%{http_code}')
+
+  if [ "$status" != "200" ]; then
+    echo "--> Sample ${i}: HTTP ${status}  FAILED"
+    cat "$out"
+    echo
+    failed=$((failed + 1))
+  else
+    summary=$(node --input-type=module -e "
+      import fs from 'node:fs';
+      const r = JSON.parse(fs.readFileSync('$out', 'utf8'));
+      const esc = r.escalation_flag ? 'ESCALATED (' + r.escalation_reasons.join(', ') + ')' : '';
+      console.log(\`\${String(r.category).padEnd(19)} \${String(r.priority).padEnd(7)} conf=\${String(r.confidence).padEnd(5)} -> \${String(r.routing_destination).padEnd(14)} \${esc}\`);
+    ")
+    echo "--> Sample ${i}: ${summary}"
+  fi
+
   sleep 1
 done
 
-echo "All ${#payloads[@]} samples sent."
+echo
+if [ "$failed" -gt 0 ]; then
+  echo "${failed} of ${#payloads[@]} samples failed."
+  exit 1
+fi
+
+echo "All ${#payloads[@]} samples processed. Responses saved to data/records/."
