@@ -21,7 +21,7 @@ and high-severity records diverted to a human escalation queue.
 
 - Docker Desktop running, with n8n reachable at `http://localhost:5678`
 - Node.js 24+
-- A DeepSeek API key (only for `scripts/test-prompts.mjs`; n8n uses its own
+- A DeepSeek API key (only for `scripts/validate-prompts.mjs`; n8n uses its own
   stored credential)
 
 ## Setup
@@ -59,7 +59,7 @@ bash scripts/merge-records.sh   # writes output.json
 | `workflow.json` | The importable n8n workflow (built artifact) |
 | `workflow.template.json` | Source template; logic is injected at build time |
 | `scripts/build-workflow.mjs` | Injects `lib/triage.js` into the template |
-| `scripts/test-prompts.mjs` | Exercises both prompts against DeepSeek directly |
+| `scripts/validate-prompts.mjs` | Exercises both prompts against DeepSeek directly |
 | `samples/inbound.json` | The five synthetic test messages |
 | `output.json` | Structured output for all five samples |
 | `WRITEUP.md` | Architecture write-up |

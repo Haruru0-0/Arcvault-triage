@@ -54,7 +54,7 @@ started by the user, not by this project's compose file.
 | `lib/triage.test.js` | Unit tests for the above |
 | `prompts/01-classification.md` | Classification prompt + rationale |
 | `prompts/02-enrichment.md` | Enrichment/summary prompt + rationale |
-| `scripts/test-prompts.mjs` | Calls DeepSeek directly to validate prompts pre-n8n |
+| `scripts/validate-prompts.mjs` | Calls DeepSeek directly to validate prompts pre-n8n |
 | `scripts/build-workflow.mjs` | Injects `lib/triage.js` into the workflow template |
 | `workflow.template.json` | n8n workflow with a placeholder for the logic |
 | `workflow.json` | Built artifact — the importable deliverable |
@@ -82,7 +82,7 @@ started by the user, not by this project's compose file.
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "node --test lib/",
+    "test": "node --test \"lib/*.test.js\"",
     "build": "node scripts/build-workflow.mjs"
   }
 }
@@ -557,7 +557,7 @@ git commit -m "feat: add tested routing and escalation logic"
 Validate both prompts against the real API *before* wiring them into n8n. Debugging a prompt through the n8n canvas is far slower than through a script.
 
 **Files:**
-- Create: `prompts/01-classification.md`, `prompts/02-enrichment.md`, `scripts/test-prompts.mjs`, `.env.example`
+- Create: `prompts/01-classification.md`, `prompts/02-enrichment.md`, `scripts/validate-prompts.mjs`, `.env.example`
 
 **Interfaces:**
 - Consumes: `samples/inbound.json` from Task 1
@@ -738,7 +738,7 @@ flat list is honest about what is actually known. I would type it before this
 went anywhere near a real queue.
 ````
 
-- [ ] **Step 4: Write `scripts/test-prompts.mjs`**
+- [ ] **Step 4: Write `scripts/validate-prompts.mjs`**
 
 ```js
 import fs from 'node:fs';
@@ -747,7 +747,7 @@ import { buildRecord } from '../lib/triage.js';
 const API_KEY = process.env.DEEPSEEK_API_KEY;
 if (!API_KEY) {
   console.error('DEEPSEEK_API_KEY is not set. Copy .env.example to .env and fill it in, then:');
-  console.error('  set -a && source .env && set +a && node scripts/test-prompts.mjs');
+  console.error('  set -a && source .env && set +a && node scripts/validate-prompts.mjs');
   process.exit(1);
 }
 
@@ -847,7 +847,7 @@ cp .env.example .env
 
 - [ ] **Step 6: Run the prompt validation**
 
-Run: `set -a && source .env && set +a && node scripts/test-prompts.mjs > /tmp/prompt-check.json`
+Run: `set -a && source .env && set +a && node scripts/validate-prompts.mjs > /tmp/prompt-check.json`
 
 Expected on stderr, matching spec section 9:
 
@@ -867,7 +867,7 @@ continuing. Do not proceed to Task 4 with a misclassifying prompt.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add prompts/ scripts/test-prompts.mjs .env.example
+git add prompts/ scripts/validate-prompts.mjs .env.example
 git commit -m "feat: add classification and enrichment prompts with validation harness"
 ```
 

@@ -6,7 +6,7 @@
  * before it is wired into nodes.
  *
  * Usage:
- *   set -a && source .env && set +a && node scripts/test-prompts.mjs > /tmp/check.json
+ *   set -a && source .env && set +a && node scripts/validate-prompts.mjs > /tmp/check.json
  */
 
 import fs from 'node:fs';
@@ -20,7 +20,7 @@ const API_KEY = process.env.DEEPSEEK_API_KEY;
 if (!API_KEY) {
   console.error('DEEPSEEK_API_KEY is not set.');
   console.error('Copy .env.example to .env, fill in the key, then run:');
-  console.error('  set -a && source .env && set +a && node scripts/test-prompts.mjs');
+  console.error('  set -a && source .env && set +a && node scripts/validate-prompts.mjs');
   process.exit(1);
 }
 
