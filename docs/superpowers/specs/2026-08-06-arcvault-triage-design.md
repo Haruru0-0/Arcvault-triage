@@ -89,18 +89,24 @@ Single contract, written identically to both Sheets tabs and the JSON file.
   "urgency_signal": "Single user blocked from access; began after a known release.",
   "routing_destination": "Engineering",
   "escalation_flag": false,
-  "escalation_reason": null,
+  "escalation_reasons": [],
   "summary": "..."
 }
 ```
 
-`identifiers` is an array in JSON; joined with `"; "` when written to a Sheets
-cell.
+`identifiers` and `escalation_reasons` are arrays in JSON; joined with `"; "`
+when written to a Sheets cell.
 
-`escalation_reason` is `null` when not escalated, otherwise one of:
-`low_confidence`, `incident_category`, `outage_keyword`, `billing_threshold`,
-`llm_parse_failure`. Naming *why* something escalated is what makes the
-escalation queue actionable rather than just a pile.
+`escalation_reasons` is empty when not escalated, otherwise contains one or more
+of: `low_confidence`, `incident_category`, `outage_keyword`,
+`billing_threshold`, `unknown_category`, `llm_parse_failure`.
+
+It is an **array rather than a single value** because a record can genuinely
+escalate for two reasons at once (a low-confidence billing dispute over $500),
+and a human triager benefits from seeing both. A single field would force an
+arbitrary precedence order and silently discard information. Naming *why*
+something escalated is what makes the escalation queue actionable rather than
+just a pile.
 
 ---
 
@@ -196,9 +202,12 @@ silently drops a message.
 1. `confidence < 0.70` → `low_confidence` *(per assessment spec)*
 2. `category == "Incident/Outage"` → `incident_category`
 3. Regex match on outage language → `outage_keyword`
-   `/outage|down for all users|all users (are )?(down|affected)|service is down|widespread/i`
+   `/outage|down for all users|all users (are )?(down|affected)|multiple users (are )?(affected|impacted)|service is down|widespread/i`
 4. `category == "Billing Issue"` **and** max currency amount in message > $500 → `billing_threshold`
-5. LLM call or JSON parse failed after one retry → `llm_parse_failure`
+5. `category` is not one of the five defined values → `unknown_category`
+6. LLM call or JSON parse failed after one retry → `llm_parse_failure`
+   *(short-circuits — when parsing failed the other signals cannot be trusted,
+   so this is the sole reason recorded)*
 
 ### Why category is the primary incident signal, not keywords
 
@@ -232,7 +241,7 @@ The assessment weights edge-case handling at 20%. Three failure modes:
    empty-content case is explicitly checked, not just caught, since DeepSeek
    documents it as a known JSON-mode behaviour (§4).
 3. **Unrecoverable** — record is written with `escalation_flag: true`,
-   `escalation_reason: "llm_parse_failure"`, `routing_destination: "General
+   `escalation_reasons: ["llm_parse_failure"]`, `routing_destination: "General
    Triage"`, and whatever fields were successfully obtained.
 
 **The escalation queue doubles as the dead-letter queue.** A failed record lands
