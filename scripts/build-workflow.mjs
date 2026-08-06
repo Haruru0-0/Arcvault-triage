@@ -236,7 +236,7 @@ const workflow = {
           system: CLASSIFY_SYSTEM,
           userExpression: classifyUser,
           temperature: 0,
-          maxTokens: 1500,
+          maxTokens: 4000,
         }),
         options: {},
       },
@@ -266,7 +266,7 @@ const workflow = {
           // same message yielded ["Okta"] once and [] the next time. Extraction
           // fidelity matters more here than summary prose variety.
           temperature: 0,
-          maxTokens: 2000,
+          maxTokens: 3000,
         }),
         options: {},
       },

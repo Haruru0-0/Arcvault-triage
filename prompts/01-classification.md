@@ -1,6 +1,6 @@
 # Prompt 1 — Classification
 
-Model: `deepseek-v4-flash` · `temperature: 0` · `max_tokens: 1500` ·
+Model: `deepseek-v4-flash` · `temperature: 0` · `max_tokens: 4000` ·
 `response_format: {"type": "json_object"}`
 
 ## System prompt
@@ -75,16 +75,31 @@ does.
 `temperature: 0` because classification should be reproducible: the same message
 must not route differently between two runs.
 
-**`max_tokens: 1500` for a response that is three short fields.** `deepseek-v4-flash`
+**`max_tokens: 4000` for a response that is three short fields.** `deepseek-v4-flash`
 is a reasoning model — it emits `reasoning_content` before the answer, and those
 tokens are billed against `max_tokens`. My first run set 200, and three of five
 samples failed: the model spent 185 tokens reasoning and had 15 left for the
 answer, so the JSON came back truncated with `finish_reason: "length"`. The
 failure surfaced as empty or unparseable content, which looks like a malformed
 response rather than a budget problem, and `finish_reason` was the only field
-that identified it. Observed reasoning use is roughly 200–800 tokens, so 1500
-leaves comfortable headroom. At $0.28 per million output tokens the extra budget
-costs effectively nothing; a silently truncated classification does not.
+that identified it.
+
+**I then got the size wrong a second time, which is the more useful lesson.** I
+raised it to 1500 based on the 185 tokens sample 1 had used — sizing the budget
+from one observation. Sample 4 ("is there a way to set up SSO with Okta?") then
+consumed **1476 reasoning tokens**, roughly eight times as many, leaving 24 for
+the answer and truncating the JSON at `"confidence": 0.`
+
+Reasoning cost scales with how *ambiguous* the input is, not how long it is.
+Sample 4 is the shortest kind of message and the hardest call in the set — it
+sits right on the Technical Question / Feature Request boundary — so the model
+deliberated far longer. A budget derived from an easy sample will hold until the
+first genuinely hard one arrives, which in production means it fails on exactly
+the messages that most need a correct answer.
+
+Now 4000. `max_tokens` is a ceiling, not a reservation: unused budget costs
+nothing, so there is no reason to run it tight. A silently truncated
+classification, by contrast, costs a misrouted ticket.
 
 **Tradeoffs.** The category definitions are my interpretation, not ArcVault's — a
 real deployment would derive them from the receiving teams' actual intake

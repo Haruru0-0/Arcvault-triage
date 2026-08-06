@@ -1,6 +1,6 @@
 # Prompt 2 — Enrichment and summary
 
-Model: `deepseek-v4-flash` · `temperature: 0.3` · `max_tokens: 2000` ·
+Model: `deepseek-v4-flash` · `temperature: 0.3` · `max_tokens: 3000` ·
 `response_format: {"type": "json_object"}`
 
 ## System prompt
@@ -22,7 +22,10 @@ Schema:
 Rules:
 - identifiers: copy verbatim from the message. Include account names, URLs,
   usernames, invoice numbers, error codes, ticket numbers, dollar amounts,
-  product names and timestamps. Return [] if the message contains none.
+  product and feature names, timestamps, and any third-party service, vendor or
+  integration the customer names. A named external tool is an identifier even
+  when the message is only a question about it. Return [] only when the message
+  contains no concrete detail of any kind.
   Never invent an identifier that is not present in the text.
 - urgency_signal: describe evidence from the message, such as scope of impact,
   money at stake, or whether the customer is blocked. Do not restate the priority
@@ -89,7 +92,7 @@ What matters is *which* fields move. Across runs, `category`, `priority`,
 stable — every field that determines where a ticket goes. The variation is
 confined to enrichment detail.
 
-`max_tokens: 2000` — higher than prompt 1 because this call emits four fields
+`max_tokens: 3000` — higher than prompt 1 because this call emits four fields
 including a multi-sentence summary, on top of the reasoning tokens
 `deepseek-v4-flash` generates before answering. See prompt 1's rationale for why
 that budget matters more than it looks.

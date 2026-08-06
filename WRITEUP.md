@@ -131,9 +131,25 @@ for a three-field JSON response — three of five samples failed. The model emit
 `reasoning_content` first, billed against `max_tokens`: it spent 185 tokens
 reasoning and had 15 left for the answer. The symptom was empty or truncated
 content, indistinguishable from a malformed response; only `finish_reason:
-"length"` identified it. Budgets are now 1500 and 2000. The upside is that the
-parse-failure path was exercised for real before the pipeline was built, which is
-better evidence it works than a deliberate test would have been.
+"length"` identified it.
+
+**Then I sized the fix wrong too, which is the more useful lesson.** I raised the
+budget to 1500 based on that one 185-token observation. Sample 4 — *"is there a
+way to set up SSO with Okta?"* — later consumed **1476 reasoning tokens**, about
+eight times as many, truncating its classification at `"confidence": 0.` and
+dropping the record into the escalation queue.
+
+Reasoning cost scales with how *ambiguous* the input is, not how long it is.
+Sample 4 is among the shortest messages in the set and the hardest call in it,
+sitting on the Technical Question / Feature Request boundary. A budget derived
+from an easy sample holds until the first genuinely hard message arrives — which
+in production means it fails on precisely the inputs that most need a correct
+answer. Budgets are now 4000 and 3000; `max_tokens` is a ceiling, not a
+reservation, so unused headroom costs nothing.
+
+The upside of both mistakes: the parse-failure path was exercised for real,
+twice, before the pipeline was finished — better evidence it works than a
+deliberate test would have been.
 
 **`npm test` was firing ten live API calls.** Node's test runner auto-discovers
 files named `test-*`, so it was executing `scripts/test-prompts.mjs` — my prompt

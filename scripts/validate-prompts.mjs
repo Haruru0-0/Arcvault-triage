@@ -104,7 +104,7 @@ for (const sample of samples) {
       system: CLASSIFY_SYSTEM,
       user: `Source: ${sample.source}\n\nMessage:\n${sample.raw_message}`,
       temperature: 0,
-      maxTokens: 1500,
+      maxTokens: 4000,
     });
 
     enrichment = await callDeepSeek({
@@ -115,7 +115,7 @@ for (const sample of samples) {
         `Source: ${sample.source}\n\n` +
         `Message:\n${sample.raw_message}`,
       temperature: 0.3,
-      maxTokens: 2000,
+      maxTokens: 3000,
     });
 
     process.stderr.write('ok\n');
