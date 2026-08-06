@@ -6,7 +6,7 @@
 
 **Architecture:** Webhook-triggered linear n8n pipeline. Two DeepSeek calls (classify, then enrich+summarize) followed by deterministic routing/escalation logic. Records land in a two-tab Google Sheet and as per-record JSON files. The routing logic is authored as a unit-tested JS module and injected into the n8n Code node at build time, so the business logic is testable outside n8n.
 
-**Tech Stack:** n8n (Docker), DeepSeek `deepseek-v4-flash`, Google Sheets (service account), Node.js 24 (`node --test`, zero dependencies), bash/curl.
+**Tech Stack:** n8n 2.31.6 (Docker), DeepSeek `deepseek-v4-flash`, Google Sheets (OAuth2), Node.js 24 (`node --test`, zero dependencies), bash/curl.
 
 ## Global Constraints
 
