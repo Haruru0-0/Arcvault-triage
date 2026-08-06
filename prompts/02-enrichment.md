@@ -66,10 +66,28 @@ mode here: a fabricated invoice number sends a billing agent chasing a record
 that does not exist, and the error is not visible until someone has wasted time
 on it. Repeating the constraint that matters most is deliberate.
 
-`temperature: 0.3` rather than `0`, because the summary is prose and fully greedy
-decoding tends toward stilted, repetitive sentences. Extraction is constrained
-enough by the "copy verbatim" instruction that a small temperature does not put
-identifier fidelity at risk.
+**`temperature: 0`, after being wrong about this.** I originally set `0.3`,
+reasoning that the summary is prose and greedy decoding produces stilted
+sentences, and that the "copy verbatim" instruction constrained extraction
+tightly enough that a small temperature was harmless.
+
+Testing falsified that. Across runs at `0.3` the same message yielded
+`["Okta"]` once and `[]` the next; sample 5 gave `["2pm EST"]` in one run and
+`[]` in another. Extraction fidelity matters more than summary variety, so the
+temperature came down.
+
+**Dropping to 0 reduced the variance but did not eliminate it** — identifiers
+still differ between runs (`["#8821", ...]` vs `["Invoice #8821", ...]`,
+and sample 5 still flips between `["2pm EST"]` and `[]`). Hosted LLM APIs are
+not deterministic at `temperature: 0`; batching and expert routing introduce
+variation regardless of the sampling parameter. Anyone who assumes `0` means
+reproducible is in for a surprise, and it is worth measuring rather than
+assuming.
+
+What matters is *which* fields move. Across runs, `category`, `priority`,
+`routing_destination`, `escalation_flag` and `escalation_reasons` were all
+stable — every field that determines where a ticket goes. The variation is
+confined to enrichment detail.
 
 `max_tokens: 2000` — higher than prompt 1 because this call emits four fields
 including a multi-sentence summary, on top of the reasoning tokens

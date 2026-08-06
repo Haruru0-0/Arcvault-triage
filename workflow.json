@@ -56,7 +56,7 @@
         "nodeCredentialType": "deepSeekApi",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\"model\":\"deepseek-v4-flash\",\"temperature\":0.3,\"max_tokens\":2000,\"response_format\":{\"type\":\"json_object\"},\"messages\":[{\"role\":\"system\",\"content\":\"You extract structured detail from an inbound customer support message for\\nArcVault, a B2B software company. The message has already been classified.\\n\\nReturn json only. No prose, no markdown fences.\\n\\nSchema:\\n{\\n  \\\"core_issue\\\": \\\"one sentence stating what the customer needs\\\",\\n  \\\"identifiers\\\": [\\\"array of concrete identifiers quoted from the message\\\"],\\n  \\\"urgency_signal\\\": \\\"one sentence on what makes this urgent or not, grounded in the message\\\",\\n  \\\"summary\\\": \\\"2-3 sentences for the team receiving this ticket\\\"\\n}\\n\\nRules:\\n- identifiers: copy verbatim from the message. Include account names, URLs,\\n  usernames, invoice numbers, error codes, ticket numbers, dollar amounts,\\n  product names and timestamps. Return [] if the message contains none.\\n  Never invent an identifier that is not present in the text.\\n- urgency_signal: describe evidence from the message, such as scope of impact,\\n  money at stake, or whether the customer is blocked. Do not restate the priority\\n  label.\\n- summary: write for the team that receives this ticket. State what happened,\\n  what is known, and what they should look at. Do not repeat the raw message\\n  verbatim and do not open with a greeting.\\n- Never invent facts. If something is not in the message, leave it out.\"},{\"role\":\"user\",\"content\":\"Category: \" + $('Classify').first().json.choices[0].message.content.category + \"\\nPriority: \" + $('Classify').first().json.choices[0].message.content.priority + \"\\nSource: \" + $('Intake Webhook').first().json.body.source + \"\\n\\nMessage:\\n\" + $('Intake Webhook').first().json.body.raw_message}]} }}",
+        "jsonBody": "={{ {\"model\":\"deepseek-v4-flash\",\"temperature\":0,\"max_tokens\":2000,\"response_format\":{\"type\":\"json_object\"},\"messages\":[{\"role\":\"system\",\"content\":\"You extract structured detail from an inbound customer support message for\\nArcVault, a B2B software company. The message has already been classified.\\n\\nReturn json only. No prose, no markdown fences.\\n\\nSchema:\\n{\\n  \\\"core_issue\\\": \\\"one sentence stating what the customer needs\\\",\\n  \\\"identifiers\\\": [\\\"array of concrete identifiers quoted from the message\\\"],\\n  \\\"urgency_signal\\\": \\\"one sentence on what makes this urgent or not, grounded in the message\\\",\\n  \\\"summary\\\": \\\"2-3 sentences for the team receiving this ticket\\\"\\n}\\n\\nRules:\\n- identifiers: copy verbatim from the message. Include account names, URLs,\\n  usernames, invoice numbers, error codes, ticket numbers, dollar amounts,\\n  product names and timestamps. Return [] if the message contains none.\\n  Never invent an identifier that is not present in the text.\\n- urgency_signal: describe evidence from the message, such as scope of impact,\\n  money at stake, or whether the customer is blocked. Do not restate the priority\\n  label.\\n- summary: write for the team that receives this ticket. State what happened,\\n  what is known, and what they should look at. Do not repeat the raw message\\n  verbatim and do not open with a greeting.\\n- Never invent facts. If something is not in the message, leave it out.\"},{\"role\":\"user\",\"content\":\"Category: \" + $('Classify').first().json.choices[0].message.content.category + \"\\nPriority: \" + $('Classify').first().json.choices[0].message.content.priority + \"\\nSource: \" + $('Intake Webhook').first().json.body.source + \"\\n\\nMessage:\\n\" + $('Intake Webhook').first().json.body.raw_message}]} }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -146,7 +146,7 @@
         "operation": "append",
         "documentId": {
           "__rl": true,
-          "value": "",
+          "value": "1Gc_XxMHd-3UX8JZfc4dTTi4Eg2h5fg1NLm75-klCxhs",
           "mode": "id"
         },
         "sheetName": {
@@ -312,14 +312,19 @@
       ],
       "id": "sheet-escalation",
       "name": "Sheet: Escalation",
-      "disabled": true
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "UCtLUCrxmFpHm6Bu",
+          "name": "Google Sheets account"
+        }
+      }
     },
     {
       "parameters": {
         "operation": "append",
         "documentId": {
           "__rl": true,
-          "value": "",
+          "value": "1Gc_XxMHd-3UX8JZfc4dTTi4Eg2h5fg1NLm75-klCxhs",
           "mode": "id"
         },
         "sheetName": {
@@ -485,7 +490,12 @@
       ],
       "id": "sheet-routed",
       "name": "Sheet: Routed",
-      "disabled": true
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "UCtLUCrxmFpHm6Bu",
+          "name": "Google Sheets account"
+        }
+      }
     }
   ],
   "connections": {

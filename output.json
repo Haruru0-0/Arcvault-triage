@@ -1,95 +1,96 @@
 [
   {
-    "record_id": "av-20260806T104419Z-a0f9",
-    "received_at": "2026-08-06T10:44:19.572Z",
+    "record_id": "av-20260806T120445Z-34cd",
+    "received_at": "2026-08-06T12:04:45.004Z",
     "source": "Email",
     "raw_message": "Hi, I tried logging in this morning and keep getting a 403 error. My account is arcvault.io/user/jsmith. This started after your update last Tuesday.",
     "category": "Bug Report",
     "priority": "High",
     "confidence": 0.9,
-    "core_issue": "Customer cannot log in and receives a 403 error after the last Tuesday update.",
+    "core_issue": "Customer is unable to log in to their ArcVault account and receives a 403 error.",
     "identifiers": [
-      "arcvault.io/user/jsmith"
+      "arcvault.io/user/jsmith",
+      "403"
     ],
-    "urgency_signal": "The customer is blocked from accessing their account, which started after a recent update, indicating a potential account or system-wide access issue.",
+    "urgency_signal": "The customer is completely blocked from accessing their account, and the issue appears to have started after a recent update, which may indicate a broader problem.",
     "routing_destination": "Engineering",
     "escalation_flag": false,
     "escalation_reasons": [],
-    "summary": "The customer attempted to log in this morning and received a 403 error on their account page. This began after the update last Tuesday. The team should investigate any access control changes or session/auth issues related to the arcvault.io/user/jsmith account and the timing of the update."
+    "summary": "User jsmith reports a 403 error when trying to log in. The issue started after last Tuesday's update. The team should investigate possible authentication or authorization changes that may have caused this error for this specific account or more broadly."
   },
   {
-    "record_id": "av-20260806T104425Z-3527",
-    "received_at": "2026-08-06T10:44:25.077Z",
+    "record_id": "av-20260806T120452Z-35f1",
+    "received_at": "2026-08-06T12:04:52.521Z",
     "source": "Web Form",
     "raw_message": "We'd love to see a bulk export feature for our audit logs. We're a compliance-heavy org and this would save us hours every month.",
     "category": "Feature Request",
     "priority": "Medium",
     "confidence": 0.95,
-    "core_issue": "Customer requests a bulk export feature for audit logs to save time for their compliance-heavy organization.",
+    "core_issue": "Customer requests a bulk export feature for audit logs to save time in compliance-heavy workflows.",
     "identifiers": [],
-    "urgency_signal": "The customer indicates that the lack of bulk export costs them hours every month, but they are not blocked or experiencing an outage.",
+    "urgency_signal": "The customer indicates that this feature would save their compliance-heavy organization hours each month, but there is no indication of an immediate blocker or urgent impact.",
     "routing_destination": "Product",
     "escalation_flag": false,
     "escalation_reasons": [],
-    "summary": "The customer is requesting a bulk export feature for audit logs, citing their compliance-heavy operations. They estimate this would save them hours of work each month. The team should consider this as a feature request and evaluate its feasibility."
+    "summary": "The customer submitted a feature request via web form asking for bulk export of audit logs. They highlight that as a compliance-heavy organization, this capability would save significant time monthly. The team should evaluate the feasibility of adding bulk export functionality and consider the compliance sector's needs."
   },
   {
-    "record_id": "av-20260806T104435Z-e8a1",
-    "received_at": "2026-08-06T10:44:35.425Z",
+    "record_id": "av-20260806T120504Z-1a38",
+    "received_at": "2026-08-06T12:05:04.191Z",
     "source": "Support Portal",
     "raw_message": "Invoice #8821 shows a charge of $1,240 but our contract rate is $980/month. Can someone look into this?",
     "category": "Billing Issue",
-    "priority": "High",
+    "priority": "Medium",
     "confidence": 0.95,
-    "core_issue": "Customer reports an invoice charge that does not match their contracted monthly rate.",
+    "core_issue": "Customer needs an explanation and resolution for invoice #8821 showing a charge of $1,240 that exceeds the contract rate of $980/month.",
     "identifiers": [
       "Invoice #8821",
       "$1,240",
       "$980/month"
     ],
-    "urgency_signal": "No explicit urgency is stated; the customer requests investigation of a billing discrepancy, with a $260 difference at stake.",
+    "urgency_signal": "The customer reports a specific overcharge of $260 on an invoice, suggesting a potential billing error that may affect payment and customer trust, but no service disruption is indicated.",
     "routing_destination": "Billing",
     "escalation_flag": true,
     "escalation_reasons": [
       "billing_threshold"
     ],
-    "summary": "The customer received invoice #8821 for $1,240 but their contract rate is $980/month. They asked for someone to look into the discrepancy. The team should verify the contract terms and the billing calculation for this invoice."
+    "summary": "A customer submitted a support request via the portal indicating that invoice #8821 was charged $1,240 instead of the agreed contract rate of $980/month. The team should review the invoice details, verify the contract agreement, and determine if the charge is correct or if a correction/refund is needed."
   },
   {
-    "record_id": "av-20260806T104441Z-66dc",
-    "received_at": "2026-08-06T10:44:41.286Z",
+    "record_id": "av-20260806T120512Z-111e",
+    "received_at": "2026-08-06T12:05:12.866Z",
     "source": "Email",
     "raw_message": "I'm not sure if this is the right place to ask, but is there a way to set up SSO with Okta? We're evaluating switching our auth provider.",
     "category": "Technical Question",
     "priority": "Low",
-    "confidence": 0.95,
-    "core_issue": "Customer wants to know if SSO with Okta can be set up, as they are evaluating switching auth providers.",
+    "confidence": 0.85,
+    "core_issue": "Customer needs to know if they can set up SSO with Okta as they evaluate switching auth providers.",
     "identifiers": [],
-    "urgency_signal": "No urgency indicated; the customer is in an evaluation phase and not blocked or facing an immediate issue.",
+    "urgency_signal": "No urgent signals; the customer is evaluating options and asks a general setup question.",
     "routing_destination": "IT/Security",
     "escalation_flag": false,
     "escalation_reasons": [],
-    "summary": "The customer is inquiring about Okta SSO support, likely as part of a broader auth provider evaluation. They are unsure if they reached the right channel. We should clarify SSO capabilities and next steps for enabling Okta."
+    "summary": "The customer is inquiring about Okta SSO setup, mentioning they are evaluating switching their auth provider. The team should provide information on current SSO capabilities and any Okta integration steps or documentation."
   },
   {
-    "record_id": "av-20260806T104454Z-328f",
-    "received_at": "2026-08-06T10:44:54.479Z",
+    "record_id": "av-20260806T120523Z-9f3b",
+    "received_at": "2026-08-06T12:05:23.479Z",
     "source": "Web Form",
     "raw_message": "Your dashboard stopped loading for us around 2pm EST. Checked our end � it's definitely on yours. Multiple users affected.",
     "category": "Incident/Outage",
     "priority": "High",
     "confidence": 0.95,
-    "core_issue": "Customer needs the dashboard loading issue resolved.",
+    "core_issue": "Customer's dashboard stopped loading and needs to be restored, indicating an outage on our side.",
     "identifiers": [
       "2pm EST"
     ],
-    "urgency_signal": "Multiple users are impacted and the issue has been ongoing since 2pm EST, indicating a widespread outage.",
+    "urgency_signal": "Multiple users are affected, indicating a widespread outage that is blocking the customer's team from using the dashboard, so it is urgent.",
     "routing_destination": "Engineering",
     "escalation_flag": true,
     "escalation_reasons": [
       "incident_category",
       "outage_keyword"
     ],
-    "summary": "The dashboard stopped loading for the customer around 2pm EST. They report it is on our end and multiple users are affected. We should investigate the dashboard service for any outages or recent changes that could have caused this."
+    "summary": "The dashboard is down for the customer, starting around 2pm EST, affecting multiple users. They insist the issue is on our side after checking their end. We should investigate the dashboard service for an outage affecting this account and broader availability."
   }
 ]

@@ -93,8 +93,20 @@ prompt wording. The prompt also has no few-shot examples; with more time I would
 add two or three drawn from genuinely ambiguous historical tickets, which
 typically helps boundary cases more than additional instructions do.
 
-**What I would change with more time.** Replace self-reported confidence with
-self-consistency: sample the classification three times at `temperature: 0.3` and
-use the agreement rate as the confidence signal. That is a real measurement
-rather than the model's opinion of itself. It triples classification cost, which
-is the only reason it is not here.
+**Measured: confidence is not reproducible, even at `temperature: 0`.** Running
+the same five messages twice, `category`, `priority` and every routing and
+escalation field came back identical — but `confidence` moved. Hosted LLM APIs
+do not guarantee determinism at temperature 0.
+
+That matters more than it looks, because Step 6 gates human escalation on
+`confidence < 0.70`. On this sample set every score landed near 0.95, far from
+the boundary, so `escalation_flag` stayed stable — but that is a property of
+these five messages, not of the design. A genuinely ambiguous message scoring
+near 0.70 could escalate on one run and not the next, from identical input.
+
+**What I would change with more time.** This turns the self-consistency idea from
+a refinement into the actual fix. Sample the classification three times and use
+the agreement rate as the confidence signal: agreement across runs is a real
+measurement and is stable in a way a self-reported number is not. It triples
+classification cost — roughly $0.003 for this run — which is why it is not here,
+but I would not ship confidence-gated escalation to production without it.

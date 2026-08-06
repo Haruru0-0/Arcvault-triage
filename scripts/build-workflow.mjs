@@ -239,7 +239,10 @@ const workflow = {
         jsonBody: deepSeekBody({
           system: ENRICH_SYSTEM,
           userExpression: enrichUser,
-          temperature: 0.3,
+          // 0, not 0.3: at 0.3 identifier extraction varied between runs — the
+          // same message yielded ["Okta"] once and [] the next time. Extraction
+          // fidelity matters more here than summary prose variety.
+          temperature: 0,
           maxTokens: 2000,
         }),
         options: {},
