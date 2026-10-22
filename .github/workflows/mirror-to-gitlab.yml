@@ -1,0 +1,37 @@
+name: Mirror to GitLab
+
+on:
+  push:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-to-gitlab
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Copy branches and tags to GitLab
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_USER: Haruru0-0
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          set -euo pipefail
+          git clone --bare "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" repo.git
+          cd repo.git
+          # GitLab protects the default branch and refuses forced updates: lift that for the mirror.
+          for branch in $(git for-each-ref --format='%(refname:short)' refs/heads/); do
+            encoded=$(python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$branch")
+            curl -s -o /dev/null -X DELETE -H "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
+              "https://gitlab.com/api/v4/projects/${GITLAB_USER}%2F${REPO_NAME}/protected_branches/${encoded}" || true
+          done
+          git push --prune "https://oauth2:${GITLAB_TOKEN}@gitlab.com/${GITLAB_USER}/${REPO_NAME}.git" \
+            '+refs/heads/*:refs/heads/*' '+refs/tags/*:refs/tags/*'
